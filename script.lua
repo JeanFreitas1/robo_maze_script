@@ -10,6 +10,7 @@ function sysCall_init()
     sensores[5]=sim.getObjectHandle("Vision_sensor_SD") -- associa sensor 05
     sensores[6]=sim.getObjectHandle("Vision_sensor_RE") -- associa sensor 04
     sensores[7]=sim.getObjectHandle("Vision_sensor_RD") -- associa sensor 05
+    sensores[8]=sim.getObjectHandle("Vision_sensor_RR") -- associa sensor 06
     clock=os.clock -- define a funcao de tempo
     t=clock() -- faz a leitura do tempo inicial
     t0=t -- tempo inicial recebe t
@@ -24,8 +25,7 @@ function sysCall_init()
     
     index=1
     map={}
-    
-    buf_time=0
+    buf_time=clock()
 end
 
 function saveAction(action)
@@ -167,8 +167,7 @@ end
 
 
 function sysCall_actuation()
-
-    print(map)
+    print(buf_time)
 
     if (y==0) then
         -- print('Seguir')
@@ -176,8 +175,8 @@ function sysCall_actuation()
         seguir()
     end
 
-    if ((S[1]==0) and (S[2]==0) and (S[3]==0) and (S[4]==0) and (S[5]==0) and (y==0)) then
-        saveAction(-2)
+    if ((S[1]==0) and (S[2]==0) and (S[3]==0) and (S[4]==0) and (S[5]==0) and (S[8]==0) and (y==0)) then
+        parar()
         y=3
     end
 
@@ -210,22 +209,18 @@ function sysCall_actuation()
     end
     -- Se tiver opcao esquerda escolhe
     if (y==2) then
-        
         escolher()
-
     end
 
     if (y==3) then
         --print('executando esquerda')
         esquerda()
-        
     end
 
     if (y==4) then
         --print('executando direita')
         direita()
     end
-
 
     robot_pos=sim.getObjectPosition(robot,-1)
 
