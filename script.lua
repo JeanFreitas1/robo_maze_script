@@ -1,8 +1,9 @@
 function sysCall_init()
-    robot =sim.getObjectHandle("Pioneer_p3dx") -- Define o robo na variavel robot
+
+    robot=sim.getObjectHandle("Pioneer_p3dx") -- Define o robo na variavel robot
     motorLeft=sim.getObjectHandle("Pioneer_p3dx_leftMotor") -- Motor esquerda
     motorRight=sim.getObjectHandle("Pioneer_p3dx_rightMotor")-- Motor direita
-    sensores={-1,-1,-1,-1,-1,-1,-1} -- cria um vetor para os sensores de visao
+    sensores={-1,-1,-1,-1,-1,-1,-1,-1} -- cria um vetor para os sensores de visao
     sensores[1]=sim.getObjectHandle("Vision_sensor_S1") -- associa sensor 01
     sensores[2]=sim.getObjectHandle("Vision_sensor_S2") -- associa sensor 02
     sensores[3]=sim.getObjectHandle("Vision_sensor_S3") -- associa sensor 03
@@ -18,10 +19,13 @@ function sysCall_init()
     vp=20.0 -- valor inicial da vari?vel de processo
     e0=0.0 -- erro inicial
     ci=0.0 -- acumulado do integrativo
-    v=3.0 -- velocidade base
+    v=2.0 -- velocidade base
     y=0
     op={0.0,0.0,0.0,0.0} -- zero o vetor
     buf_esc={1,1,1} -- {esquerda, frente, direita}
+    
+    timer_outline=nil
+    is_timer_outline=false
     
     index=1
     map={}
@@ -31,11 +35,11 @@ end
 function saveAction(action)
     map[index] = action
     index=index+1
-    print('acao salva')
+    -- print('acao salva')
 end
 
 function invertMap()
-    print(map)
+    -- print(map)
     local i
     local len = table.getn(map) -- 13
     local invertedMap = {}
@@ -44,7 +48,7 @@ function invertMap()
         invertedMap[i] = (map[(len+1)-i])*-1
     end
     map = invertedMap
-    print(map)
+    -- print(map)
     
 end
 
@@ -52,8 +56,8 @@ end
 function leitura()
     local num=0
     local den=0
-    S={0.0,0.0,0.0,0.0,0.0,0.0,0.0} -- cria vetor de 7 posicoes
-    for i=1,7,1 do
+    S={0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0} -- cria vetor de 8 posicoes
+    for i=1,8,1 do
         result,data=sim.readVisionSensor(sensores[i]) --data[11] e a intensidade do sensor
         if (result>=0) then
             if (data[11]<0.5) then -- compara a intensidade do sensor
@@ -80,7 +84,6 @@ function seguir()
     I=0.05
     e=sp-vp
     cp=G*e
-    clock=os.clock
     tf=clock()-t
     ci=(I*(e+e0)/2*(tf-t0))+ci
     c=cp+ci
@@ -89,6 +92,8 @@ function seguir()
     sim.setJointTargetVelocity(motorRight,v+c) -- velocidade do motor direito
     t0=tf
 end
+
+
 
 function esquerda()
     --print("Esquerda")
@@ -118,8 +123,13 @@ function direita()
 end
 
 
+
+
+
+
+
 function parar()
-    --print("parar")
+    print("parar")
     sim.setJointTargetVelocity(motorLeft,0) -- velocidade do motor esquerdo
     sim.setJointTargetVelocity(motorRight,0) -- velocidade do motor direito
 end
@@ -134,8 +144,8 @@ function escolher()
 
     local r = math.random(0, range*k)
     r = r/k
-    print(point1, point2, range)
-    print(r)
+    -- print(point1, point2, range)
+    -- print(r)
 
     if ( (op[1]==1) and (r < point1) ) then
         print('escolhido esquerda')
@@ -167,18 +177,29 @@ end
 
 
 function sysCall_actuation()
-    print(buf_time)
-
+    -- print(buf_time)
     if (y==0) then
         -- print('Seguir')
         leitura()
         seguir()
     end
 
-    if ((S[1]==0) and (S[2]==0) and (S[3]==0) and (S[4]==0) and (S[5]==0) and (S[8]==0) and (y==0)) then
-        parar()
-        y=3
+    if ((S[1]==0) and (S[2]==0) and (S[3]==0) and (S[4]==0) and (S[5]==0) and (y==0)) then
+        if (is_timer_outline==false) then
+            timer_outline=clock()
+            is_timer_outline=true
+        end
+        if ((is_timer_outline==true) and (clock() > timer_outline+0.5 )) then
+            parar()
+            saveAction(-2)
+            print('virar')
+            y=3
+        end
+    else
+        is_timer_outline=false
     end
+
+
 
     if (((S[4]==1) or (S[5]==1)) and (y==0)) then
         --print('Intersecao')
@@ -202,7 +223,7 @@ function sysCall_actuation()
         if ((S[2]==1) and (S[4]==1) and (S[5]==1)) then 
             op[4]=1.0 
             y=0
-            print('chegou no final')
+            -- print('chegou no final')
         end
         parar()
 
@@ -213,13 +234,15 @@ function sysCall_actuation()
     end
 
     if (y==3) then
-        --print('executando esquerda')
         esquerda()
     end
 
     if (y==4) then
-        --print('executando direita')
         direita()
+    end
+
+    if (y==5) then
+        virar()
     end
 
     robot_pos=sim.getObjectPosition(robot,-1)
