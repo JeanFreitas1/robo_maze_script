@@ -227,7 +227,7 @@ function sysCall_actuation()
         local pos_dif_y = math.abs(robot_pos_t[2]-robot_pos0[2])
 
         if ((pos_dif_x < 0.2) and (pos_dif_y < 0.2)) then
-            print('faz sentido')
+            print('tarefa finalizada!')
             parar()
         end
 
