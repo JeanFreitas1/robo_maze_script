@@ -4,9 +4,8 @@
 
 | Arquivo                 | Descrição                                           |
 | ----------------------- | --------------------------------------------------- |
-| cena.ttt                | Arquivo do V-REP com todo o projeto configurado     |
+| trabalho_robo_final.ttt | Arquivo do V-REP com todo o projeto configurado     |
 | script.lua              | Arquivo com o código fonte do robo para comparação. |
-| vrep_robot_holender.lua | Arquivo com o código fonte do Mateus Holender       |
 
 <br>
 
